@@ -25,6 +25,8 @@ const dom = {
   calculatorResult: document.getElementById("calculatorResult"),
   recommendedGlasses: document.getElementById("recommendedGlasses"),
   dailySummary: document.getElementById("dailySummary"),
+  summaryContent: document.getElementById("summaryContent"),
+  summaryToggleBtn: document.getElementById("summaryToggleBtn"),
   summaryDateLabel: document.getElementById("summaryDateLabel"),
   drinkBars: document.getElementById("drinkBars"),
   chartScaleMid: document.getElementById("chartScaleMid"),
@@ -103,6 +105,7 @@ let reminderIntervalId = null;
 let undoTimeoutId = null;
 let undoProgressId = null;
 let lastLoggedDrinkSnapshot = null; // { drinkId, counts, log } for undo
+let isSummaryExpanded = false;
 
 // Kidney health thresholds
 const CAFFEINE_CAUTION_MG = 200;
@@ -1030,6 +1033,13 @@ function renderTodaySummary() {
   );
 }
 
+function setSummaryExpanded(expanded) {
+  isSummaryExpanded = expanded;
+  dom.summaryContent.hidden = !expanded;
+  dom.summaryToggleBtn.setAttribute("aria-expanded", String(expanded));
+  dom.summaryToggleBtn.classList.toggle("is-open", expanded);
+}
+
 function renderHistory() {
   const entries = Object.entries(state.archive).sort((a, b) => (a[0] < b[0] ? 1 : -1));
 
@@ -1201,6 +1211,11 @@ function bindEvents() {
     applyTheme(next);
   });
 
+  // End-of-day summary toggle
+  dom.summaryToggleBtn.addEventListener("click", () => {
+    setSummaryExpanded(!isSummaryExpanded);
+  });
+
   // Undo last drink
   dom.undoBtn.addEventListener("click", () => {
     if (!lastLoggedDrinkSnapshot) return;
@@ -1224,6 +1239,7 @@ function init() {
   dom.ringValue.style.strokeDashoffset = `${ringCircumference}`;
   renderDrinkButtons();
   bindEvents();
+  setSummaryExpanded(false);
   renderAll();
   startReminderScheduler();
 }

@@ -364,10 +364,21 @@
 
       <section class="card" aria-labelledby="summaryHeading">
         <div class="section-head">
-          <h2 id="summaryHeading">End-of-Day Summary</h2>
-          <p class="chip" id="summaryDateLabel"></p>
+          <h2 id="summaryHeading">Summary</h2>
+          <button
+            type="button"
+            id="summaryToggleBtn"
+            class="info-btn summary-toggle-btn"
+            aria-expanded="false"
+            aria-controls="summaryContent"
+          >
+            End-of-Day Summary
+          </button>
         </div>
-        <div id="dailySummary" class="summary"></div>
+        <div id="summaryContent" class="summary-collapsible" hidden>
+          <p class="chip" id="summaryDateLabel"></p>
+          <div id="dailySummary" class="summary"></div>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="chartsHeading">

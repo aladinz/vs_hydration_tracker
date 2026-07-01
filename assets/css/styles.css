@@ -2595,3 +2595,32 @@ button:focus-visible {
   }
 }
 
+.summary-collapsible {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.summary-collapsible[hidden] {
+  display: none !important;
+}
+
+.summary-collapsible #summaryDateLabel {
+  width: fit-content;
+}
+
+.summary-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summary-toggle-btn::after {
+  content: "+";
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.summary-toggle-btn.is-open::after {
+  content: "-";
+}
+
