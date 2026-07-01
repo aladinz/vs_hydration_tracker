@@ -2595,6 +2595,32 @@ button:focus-visible {
   }
 }
 
+.site-footer {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto 2rem;
+  padding: 0.85rem 1rem 1rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.site-footer p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 460px) {
+  .site-footer {
+    width: calc(100% - 1rem);
+    margin-bottom: 1.5rem;
+    padding: 0.7rem 0.6rem;
+  }
+
+  .site-footer p {
+    font-size: 0.84rem;
+  }
+}
+
 .summary-collapsible {
   display: grid;
   gap: 0.8rem;
