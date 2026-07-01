@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hydration Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" aria-live="polite">
+      <header class="hero">
+        <div class="hero-top">
+          <p class="eyebrow">Hydration Dashboard</p>
+          <button type="button" id="themeToggle" class="theme-toggle" aria-label="Switch to light mode" title="Toggle light/dark mode">
+            <svg id="themeIconMoon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" fill="currentColor"/></svg>
+            <svg id="themeIconSun" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><circle cx="12" cy="12" r="5" fill="currentColor"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+          </button>
+        </div>
+        <h1>Daily Drink Tracker</h1>
+        <p class="hero-copy">
+          Tap any drink button to log one serving instantly. Data is saved on this device and resets by day.
+        </p>
+      </header>
+
+      <!-- Undo Toast -->
+      <div class="undo-toast" id="undoToast" hidden role="status" aria-live="polite">
+        <span class="undo-msg" id="undoMsg">Logged drink</span>
+        <button type="button" id="undoBtn" class="undo-btn">Undo</button>
+        <div class="undo-progress" id="undoProgress"></div>
+      </div>
+
+      <section class="card water-progress" aria-labelledby="waterProgressHeading">
+        <div class="section-head">
+          <h2 id="waterProgressHeading">Water Goal</h2>
+          <p class="chip" id="goalStatus">In progress</p>
+        </div>
+
+        <div class="goal-tabs">
+          <button type="button" class="goal-tab active" data-tab="manual">Manual</button>
+          <button type="button" class="goal-tab" data-tab="calculator">Calculator</button>
+        </div>
+
+        <form id="goalForm" class="goal-form goal-tab-content" data-tab-content="manual" novalidate>
+          <label for="waterGoalInput">Daily goal (glasses)</label>
+          <div class="goal-input-wrap">
+            <input
+              id="waterGoalInput"
+              name="waterGoal"
+              type="number"
+              min="1"
+              max="30"
+              step="1"
+              required
+              inputmode="numeric"
+            />
+            <button type="submit">Save Goal</button>
+          </div>
+          <p class="helper-text" id="goalMessage">Default goal is 8 glasses.</p>
+        </form>
+
+        <form id="calculatorForm" class="goal-form goal-tab-content" data-tab-content="calculator" style="display: none;" novalidate>
+          <div class="calculator-fields">
+            <div class="calculator-field">
+              <label for="bodyWeight">Body Weight</label>
+              <div class="goal-input-wrap">
+                <input id="bodyWeight" type="number" min="66" max="440" step="0.5" placeholder="154" inputmode="decimal" />
+                <select id="weightUnit" aria-label="Weight unit">
+                  <option value="lb" selected>lb</option>
+                  <option value="kg">kg</option>
+                </select>
+              </div>
+            </div>
+            <div class="calculator-field">
+              <label for="activityLevel">Activity Level</label>
+              <select id="activityLevel">
+                <option value="sedentary">Sedentary (little exercise)</option>
+                <option value="light" selected>Light (1-3 days/week)</option>
+                <option value="moderate">Moderate (3-5 days/week)</option>
+                <option value="active">Active (5-7 days/week)</option>
+                <option value="intense">Intense (daily intense exercise)</option>
+              </select>
+            </div>
+            <div class="calculator-field">
+              <label for="climate">Climate</label>
+              <select id="climate">
+                <option value="cool">Cool</option>
+                <option value="temperate" selected>Temperate</option>
+                <option value="hot">Hot/Humid</option>
+              </select>
+            </div>
+          </div>
+          <div class="calculator-result" id="calculatorResult" style="display: none;">
+            <p class="calculator-text">Recommended daily intake: <strong id="recommendedGlasses">0</strong> glasses</p>
+          </div>
+          <button type="button" id="calculateBtn" class="goal-calc-btn">Calculate Goal</button>
+          <button type="submit" id="applyCalcBtn" style="display: none;">Apply Calculated Goal</button>
+        </form>
+
+        <div class="metrics-grid">
+          <article class="metric water-highlight">
+            <h3>Water Intake</h3>
+            <p><span id="waterIntake">0</span> glasses</p>
+          </article>
+          <article class="metric">
+            <h3>Water Progress</h3>
+            <p><span id="goalPercent">0</span>%</p>
+          </article>
+          <article class="metric">
+            <h3>Total Drinks</h3>
+            <p><span id="overallTotal">0</span> servings</p>
+          </article>
+        </div>
+
+        <div class="ring-wrap" aria-label="Daily drink goal ring meter">
+          <svg class="ring-meter" viewBox="0 0 120 120" role="img" aria-label="Daily drink progress ring chart">
+            <defs>
+              <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4ac6ff" />
+                <stop offset="55%" stop-color="#2f86ff" />
+                <stop offset="100%" stop-color="#36e0c7" />
+              </linearGradient>
+            </defs>
+            <circle class="ring-track" cx="60" cy="60" r="48"></circle>
+            <circle class="ring-value" id="ringValue" cx="60" cy="60" r="48"></circle>
+          </svg>
+          <div class="ring-content">
+            <p class="ring-label">Daily Progress</p>
+            <p class="ring-percent"><span id="ringPercent">0</span>%</p>
+          </div>
+        </div>
+
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Daily drink goal completion">
+          <div class="progress-fill" id="goalBar"></div>
+        </div>
+
+        <!-- Personal Water Budget Breakdown -->
+        <div class="budget-breakdown" id="budgetBreakdown">
+          <h3 class="budget-title">Daily Budget Timeline</h3>
+          <div class="budget-periods">
+            <div class="budget-period">
+              <div class="period-head">
+                <span class="period-name">Morning</span>
+                <span class="period-goal" id="morningGoal">3 gl</span>
+              </div>
+              <div class="period-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Morning intake progress">
+                <div class="period-fill" id="morningFill"></div>
+              </div>
+              <span class="period-logged" id="morningLogged">0 / 3</span>
+            </div>
+            <div class="budget-period">
+              <div class="period-head">
+                <span class="period-name">Afternoon</span>
+                <span class="period-goal" id="afternoonGoal">4 gl</span>
+              </div>
+              <div class="period-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Afternoon intake progress">
+                <div class="period-fill" id="afternoonFill"></div>
+              </div>
+              <span class="period-logged" id="afternoonLogged">0 / 4</span>
+            </div>
+            <div class="budget-period">
+              <div class="period-head">
+                <span class="period-name">Evening</span>
+                <span class="period-goal" id="eveningGoal">3 gl</span>
+              </div>
+              <div class="period-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Evening intake progress">
+                <div class="period-fill" id="eveningFill"></div>
+              </div>
+              <span class="period-logged" id="eveningLogged">0 / 3</span>
+            </div>
+          </div>
+          <p class="budget-note">Even spacing helps kidney health. Spread drinks throughout the day.</p>
+        </div>
+
+        <!-- Diuretic Offset Info -->
+        <div class="diuretic-info" id="diureticInfo" hidden role="note">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="diuretic-icon"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 6v6M9 15h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <div>
+            <p class="diuretic-label">Diuretics detected</p>
+            <p class="diuretic-text" id="diureticText"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Drink Reminders ───────────────────────────────────── -->
+      <section class="card reminder-card" aria-labelledby="reminderHeading">
+        <div class="section-head">
+          <h2 id="reminderHeading">Drink Reminders</h2>
+          <p class="chip muted" id="reminderStatusChip">Off</p>
+        </div>
+        <div class="reminder-body">
+          <div class="reminder-toggle-row">
+            <div class="reminder-toggle-label">
+              <span class="reminder-label-main">Browser notifications</span>
+              <span class="reminder-label-sub">Get nudged when you forget to drink</span>
+            </div>
+            <button type="button" class="toggle-btn" id="reminderToggle" aria-pressed="false">Off</button>
+          </div>
+          <div class="reminder-interval-row" id="reminderIntervalRow">
+            <label class="reminder-label-main" for="reminderIntervalSelect">Remind me every</label>
+            <select id="reminderIntervalSelect">
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60" selected>60 minutes</option>
+              <option value="90">90 minutes</option>
+              <option value="120">2 hours</option>
+            </select>
+          </div>
+          <p class="reminder-next" id="reminderNext"></p>
+          <p class="reminder-perm-note" id="reminderPermNote" hidden>
+            Notifications were blocked. Please allow them in your browser settings and reload.
+          </p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="drinkButtonsHeading">
+        <div class="section-head">
+          <h2 id="drinkButtonsHeading">Log a Drink</h2>
+          <p class="chip muted">+1 serving per tap</p>
+        </div>
+        <div class="drink-grid" id="drinkGrid"></div>
+      </section>
+
+      <!-- ── Kidney Health Metrics ───────────────────────────── -->
+      <section class="card" aria-labelledby="healthMetricsHeading">
+        <div class="section-head">
+          <h2 id="healthMetricsHeading">Kidney Health Metrics</h2>
+          <p class="chip muted" id="healthIndexChip">—</p>
+        </div>
+
+        <!-- Kidney Health Index -->
+        <div class="khi-panel">
+          <div class="khi-score-area">
+            <p class="khi-score"><span id="healthIndexValue">—</span><span class="khi-unit">%</span></p>
+            <p class="khi-label">Hydration Quality</p>
+          </div>
+          <p class="khi-desc" id="healthIndexDesc">Log drinks to see your kidney-friendly hydration quality score.</p>
+        </div>
+
+        <!-- Caffeine Meter -->
+        <div class="health-meter-group">
+          <div class="health-meter-head">
+            <span class="health-meter-label">Caffeine Today</span>
+            <span class="health-meter-value"><span id="caffeineValue">0</span>&thinsp;mg <span class="health-meter-limit">/ 400 mg daily limit</span></span>
+          </div>
+          <div class="health-meter-track" role="progressbar" aria-valuemin="0" aria-valuemax="400" aria-valuenow="0" aria-label="Daily caffeine intake">
+            <div class="health-meter-fill level-ok" id="caffeineFill"></div>
+          </div>
+          <p class="health-meter-status status-level-ok" id="caffeineStatus">Within safe range</p>
+        </div>
+
+        <!-- Sodium Meter -->
+        <div class="health-meter-group">
+          <div class="health-meter-head">
+            <span class="health-meter-label">Sodium Today</span>
+            <span class="health-meter-value"><span id="sodiumValue">0</span>&thinsp;mg <span class="health-meter-limit">/ 2,300 mg daily limit</span></span>
+          </div>
+          <div class="health-meter-track" role="progressbar" aria-valuemin="0" aria-valuemax="2300" aria-valuenow="0" aria-label="Daily sodium intake">
+            <div class="health-meter-fill level-ok" id="sodiumFill"></div>
+          </div>
+          <p class="health-meter-status status-level-ok" id="sodiumStatus">Within safe range</p>
+        </div>
+
+        <!-- Caffeine Warning Banner -->
+        <div class="health-warning" id="caffeineWarning" hidden role="alert">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="warning-icon-svg"><path d="M12 3L1 21h22L12 3zm0 4l8.5 14h-17L12 7zm-1 5v4h2v-4h-2zm0 5v2h2v-2h-2z" fill="currentColor"/></svg>
+          <p id="caffeineWarningText"></p>
+        </div>
+      </section>
+
+      <!-- ── Kidney Health Tip ────────────────────────────────── -->
+      <section class="card kidney-tip-card" aria-labelledby="kidneyTipHeading">
+        <div class="section-head">
+          <h2 id="kidneyTipHeading">Kidney Health Tip</h2>
+          <p class="chip muted" id="tipDayChip">Daily Tip</p>
+        </div>
+        <div class="tip-content">
+          <div class="tip-icon-wrap" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2c3.7 5.3 6.5 8.6 6.5 12A6.5 6.5 0 1 1 5.5 14c0-3.4 2.8-6.7 6.5-12z" fill="currentColor"/></svg>
+          </div>
+          <p class="tip-text" id="kidneyTipText">Loading tip…</p>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="todayTotalsHeading">
+        <div class="section-head">
+          <h2 id="todayTotalsHeading">Today Totals</h2>
+          <div class="button-group">
+            <button type="button" class="info-btn" id="startNewDayBtn">Start New Day</button>
+            <button type="button" class="danger" id="archiveTodayBtn">Archive & Reset Today</button>
+          </div>
+        </div>
+        <div class="totals-list" id="totalsList"></div>
+      </section>
+
+      <section class="card" aria-labelledby="timeLogHeading">
+        <div class="section-head">
+          <h2 id="timeLogHeading">Time Log</h2>
+          <p class="chip muted" id="logCount">Today's entries</p>
+        </div>
+        <div id="timeLogContainer" class="time-log-list"></div>
+      </section>
+
+      <!-- ── Hourly Distribution ───────────────────────────────── -->
+      <section class="card" aria-labelledby="heatmapHeading">
+        <div class="section-head">
+          <h2 id="heatmapHeading">Hourly Distribution</h2>
+          <p class="chip muted">Today's pattern</p>
+        </div>
+        <div class="heatmap-wrap" id="hourlyHeatmap" role="img" aria-label="Hourly drink distribution heatmap"></div>
+        <div class="heatmap-legend">
+          <span class="legend-label">None</span>
+          <div class="legend-cells">
+            <div class="heatmap-cell lvl-0"></div>
+            <div class="heatmap-cell lvl-1"></div>
+            <div class="heatmap-cell lvl-2"></div>
+            <div class="heatmap-cell lvl-3"></div>
+            <div class="heatmap-cell lvl-4"></div>
+          </div>
+          <span class="legend-label">High</span>
+        </div>
+      </section>
+
+      <!-- ── Streak & Consistency ──────────────────────────────── -->
+      <section class="card" aria-labelledby="streakHeading">
+        <div class="section-head">
+          <h2 id="streakHeading">Streak &amp; Consistency</h2>
+          <p class="chip muted" id="streakChip">0 days</p>
+        </div>
+        <div class="streak-panel">
+          <div class="streak-count-area">
+            <p class="streak-number" id="streakCount">0</p>
+            <p class="streak-label">day streak</p>
+          </div>
+          <div class="streak-info">
+            <p id="streakDesc">Log drinks today to start your streak.</p>
+            <div class="week-dots" id="weekDots" role="img" aria-label="7-day consistency calendar"></div>
+            <div class="week-dot-labels" id="weekDotLabels"></div>
+          </div>
+        </div>
+        <div class="streak-legend">
+          <div class="streak-legend-item"><span class="week-dot dot-met"></span> Goal met</div>
+          <div class="streak-legend-item"><span class="week-dot dot-near"></span> 75%+ reached</div>
+          <div class="streak-legend-item"><span class="week-dot dot-partial"></span> Some logged</div>
+          <div class="streak-legend-item"><span class="week-dot dot-missed"></span> Not met</div>
+          <div class="streak-legend-item"><span class="week-dot dot-empty"></span> No data</div>
+        </div>
+      </section>
+
+      <!-- ── Trend Insights ────────────────────────────────────── -->
+      <section class="card trend-card" aria-labelledby="trendHeading">
+        <div class="section-head">
+          <h2 id="trendHeading">Trend Insights</h2>
+          <p class="chip muted" id="trendChip">Auto-generated</p>
+        </div>
+        <p class="trend-text" id="trendText">Log more days to see your weekly trends.</p>
+        <div class="trend-stats" id="trendStats"></div>
+      </section>
+
+      <section class="card" aria-labelledby="summaryHeading">
+        <div class="section-head">
+          <h2 id="summaryHeading">End-of-Day Summary</h2>
+          <p class="chip" id="summaryDateLabel"></p>
+        </div>
+        <div id="dailySummary" class="summary"></div>
+      </section>
+
+      <section class="card" aria-labelledby="chartsHeading">
+        <div class="section-head">
+          <h2 id="chartsHeading">Hydration Charts</h2>
+          <p class="chip muted">Live visual breakdown</p>
+        </div>
+        <div class="chart-panel">
+          <div class="chart-scale" aria-hidden="true">
+            <span>0</span>
+            <span id="chartScaleMid">0</span>
+            <span id="chartScaleMax">0</span>
+          </div>
+          <div id="drinkBars" class="drink-bars" role="img" aria-label="Bar chart of drinks consumed today"></div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="historyHeading">
+        <div class="section-head">
+          <h2 id="historyHeading">Recent Archived Days</h2>
+          <p class="chip muted">Up to 7 days</p>
+        </div>
+        <div id="historyContainer" class="history-list"></div>
+      </section>
+
+      <p class="error-banner" id="errorBanner" hidden></p>
+    </main>
+
+    <script type="module" src="assets/js/app.js"></script>
+    <dialog id="newDayDialog" class="dialog-modal">
+      <div class="dialog-content">
+        <h2>Start a New Day?</h2>
+        <p>This will archive today's data and reset all drink counts to start fresh.</p>
+        <div class="dialog-actions">
+          <button type="button" id="confirmNewDay" class="primary-btn">Start New Day</button>
+          <button type="button" id="cancelNewDay">Cancel</button>
+        </div>
+      </div>
+    </dialog>
+  </body>
+</html>

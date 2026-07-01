@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Grape soda icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d99bff"/>
+      <stop offset="1" stop-color="#7832c8"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="88" height="88" rx="22" fill="url(#bg)"/>
+  <path d="M35 18h26l-3 58H38z" fill="#f4e5ff"/>
+  <path d="M39 31h18l-2 40H41z" fill="#9e5ce0"/>
+  <circle cx="44" cy="48" r="4" fill="#cf9cff"/>
+  <circle cx="52" cy="50" r="4" fill="#cf9cff"/>
+</svg>
